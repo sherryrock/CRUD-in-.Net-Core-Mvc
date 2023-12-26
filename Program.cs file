@@ -1,0 +1,83 @@
+using coreCrud.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Add services to the container.
+builder.Services.AddControllersWithViews();
+
+// 2. Configure database context.
+ConfigurationManager configuration = builder.Configuration;
+builder.Services.AddDbContext<SContext>(item => item.UseSqlServer(configuration.GetConnectionString("dbcs")));
+
+// 3. Add session services.
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Adjust the timeout as needed
+});
+
+
+
+
+
+
+
+// Configure authentication and authorization.
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login"; // Specify the login page
+        options.AccessDeniedPath = "/Home/AccessDenied"; // Specify the access denied page
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+
+
+
+
+
+var app = builder.Build();
+
+// 4. Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    // 5. Use exception handler and enable HSTS.
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+// 6. Add session middleware.
+app.UseSession();
+
+// 7. Map the default controller route.
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+
+
+
+app.Run();
