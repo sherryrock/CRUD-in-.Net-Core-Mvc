@@ -1,0 +1,15 @@
+using coreCrud.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace coreCrud.Data
+{
+    public class SContext :DbContext
+    {
+        public SContext(DbContextOptions<SContext> options) : base(options) 
+        {
+                
+        }
+        public DbSet<Student> Student_table { get; set; }
+ 
+    }
+}
