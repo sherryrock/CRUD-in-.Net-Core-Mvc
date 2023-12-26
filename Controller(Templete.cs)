@@ -1,0 +1,110 @@
+using coreCrud.Data;
+using coreCrud.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace coreCrud.Controllers
+{
+
+    //[Authorize] // Add this attribute to restrict access to authenticated users
+    //[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+
+    public class TemplateController : Controller
+    {
+
+        private readonly SContext db;
+
+        public TemplateController(SContext db)
+        {
+            this.db = db;
+        }
+
+
+        public IActionResult showList()
+        {
+            
+            // Access session data
+            var loggedInUser = HttpContext.Session.GetString("LoggedInUser");
+            if (loggedInUser != null)
+            {
+                var data = db.Student_table.ToList();
+                return View(data);
+            }
+            else
+                return RedirectToAction("Login", "Login");
+        }
+
+        public IActionResult add()
+        {
+            // Access session data for GET method
+            var loggedInUser = HttpContext.Session.GetString("LoggedInUser");
+            return View();
+
+        }
+        [HttpPost]
+        public IActionResult add(Student obj)
+        {
+
+            db.Student_table.Add(obj);
+            db.SaveChanges();
+
+            // Access session data for POST method
+            var loggedInUser = HttpContext.Session.GetString("LoggedInUser");
+
+
+            return RedirectToAction("showList", "Template");
+        }
+
+
+
+        [HttpGet]
+        public IActionResult update(int Id)
+        {
+
+            var row = db.Student_table.Where(e => e.Id == Id).FirstOrDefault();
+            return View(row);
+        }
+
+        [HttpPost]
+        public IActionResult update(Student obj)
+        {
+            var loggedInUser = HttpContext.Session.GetString("LoggedInUser");
+
+
+            var row = db.Student_table.Where(e => e.Id == obj.Id).FirstOrDefault();
+            db.Entry(row).CurrentValues.SetValues(obj);
+            db.SaveChanges();
+
+
+            return RedirectToAction("showList", "Template");
+        }
+
+        public IActionResult Detail(int Id)
+        {
+            var loggedInUser = HttpContext.Session.GetString("LoggedInUser");
+
+            var row = db.Student_table.Where(e => e.Id == Id).FirstOrDefault();
+            return View(row);
+        }
+
+        public IActionResult Delete(int Id)
+        {
+            var row = db.Student_table.Where(e => e.Id == Id).FirstOrDefault();
+            return View(row);
+        }
+        [HttpPost]
+        public IActionResult Delete(Student obj)
+        {
+            var loggedInUser = HttpContext.Session.GetString("LoggedInUser");
+
+
+            var row = db.Student_table.Where(e => e.Id == obj.Id).FirstOrDefault();
+            db.Student_table.Remove(row);
+            db.SaveChanges();
+            return RedirectToAction("showList");
+
+        }
+
+    }
+}
